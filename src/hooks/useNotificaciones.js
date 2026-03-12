@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import api from "../api/axios";
 
 export function useNotificaciones() {
-  const [permiso, setPermiso] = useState(Notification.permission);
+  const [permiso, setPermiso] = useState(
+    typeof Notification !== "undefined" ? Notification.permission : "denied"
+  );
 
   useEffect(() => {
     if (permiso === "granted") {
@@ -11,6 +13,7 @@ export function useNotificaciones() {
   }, [permiso]);
 
   const solicitarPermiso = async () => {
+    if (typeof Notification === "undefined") return "denied";
     const resultado = await Notification.requestPermission();
     setPermiso(resultado);
     return resultado;
@@ -18,24 +21,19 @@ export function useNotificaciones() {
 
   const suscribir = async () => {
     try {
-      // Registrar service worker
+      if (!("serviceWorker" in navigator)) return;
+
       const registro = await navigator.serviceWorker.register("/sw.js");
       await navigator.serviceWorker.ready;
 
-      // Obtener clave pública
       const { data } = await api.get("/api/notificaciones/vapid-public-key");
-      const publicKey = data.publicKey;
+      const clavePublica = urlBase64ToUint8Array(data.publicKey);
 
-      // Convertir clave a Uint8Array
-      const clavePublica = urlBase64ToUint8Array(publicKey);
-
-      // Suscribirse
       const suscripcion = await registro.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: clavePublica,
       });
 
-      // Enviar suscripción al backend
       await api.post("/api/notificaciones/suscribir", { suscripcion });
       console.log("✅ Suscripción push guardada");
     } catch (err) {

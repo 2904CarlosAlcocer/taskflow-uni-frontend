@@ -17,14 +17,16 @@ export default function DashboardPage() {
   const [showModal, setShowModal] = useState(false);
   const [editTarea, setEditTarea] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== "undefined" ? window.innerWidth < 768 : false
+  );
   const { permiso, solicitarPermiso } = useNotificaciones();
 
-useEffect(() => {
-  if (permiso === "default") {
-    solicitarPermiso();
-  }
-}, []);
+  useEffect(() => {
+    if (typeof Notification !== "undefined" && permiso === "default") {
+      solicitarPermiso();
+    }
+  }, []);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -169,7 +171,6 @@ useEffect(() => {
         {/* MIS TAREAS */}
         {view === "mis-tareas" && (
           <>
-            {/* Stats */}
             <div style={{
               display: "grid",
               gridTemplateColumns: "repeat(3, 1fr)",
@@ -191,7 +192,6 @@ useEffect(() => {
               ))}
             </div>
 
-            {/* Filtros */}
             <div style={{
               display: "flex", gap: 6, marginBottom: 16,
               overflowX: "auto", paddingBottom: 4,

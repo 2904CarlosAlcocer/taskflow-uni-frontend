@@ -5,6 +5,7 @@ import TareaCard from "../components/TareaCard";
 import TareaModal from "../components/TareaModal";
 import Sidebar from "../components/Sidebar";
 import Swal from "sweetalert2";
+import { useNotificaciones } from "../hooks/useNotificaciones";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -17,6 +18,13 @@ export default function DashboardPage() {
   const [editTarea, setEditTarea] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const { permiso, solicitarPermiso } = useNotificaciones();
+
+useEffect(() => {
+  if (permiso === "default") {
+    solicitarPermiso();
+  }
+}, []);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);

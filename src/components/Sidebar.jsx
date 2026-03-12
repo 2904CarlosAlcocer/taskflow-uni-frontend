@@ -1,9 +1,17 @@
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 
 export default function Sidebar({ view, setView }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const handleLogout = () => { logout(); navigate("/login"); };
 
@@ -12,6 +20,74 @@ export default function Sidebar({ view, setView }) {
     { id: "amigos",     label: "Ver Grupo",  icon: "◎" },
   ];
 
+  // ── MÓVIL: barra inferior ──────────────────────────────────────
+  if (isMobile) {
+    return (
+      <>
+        {/* Spacer para que el contenido no quede tapado */}
+        <div style={{ height: 64 }} />
+
+        <nav style={{
+          position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 100,
+          background: "rgba(10,10,11,0.97)",
+          borderTop: "1px solid rgba(255,255,255,0.08)",
+          display: "flex", alignItems: "center",
+          padding: "8px 16px 12px",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+        }}>
+          {navItems.map(item => (
+            <button key={item.id} onClick={() => setView(item.id)} style={{
+              flex: 1, display: "flex", flexDirection: "column",
+              alignItems: "center", gap: 4,
+              background: "transparent", border: "none",
+              color: view === item.id ? "#E8FF47" : "#555",
+              cursor: "pointer", padding: "6px 0",
+              transition: "all 0.15s",
+            }}>
+              <span style={{ fontSize: 20 }}>{item.icon}</span>
+              <span style={{
+                fontSize: 10, fontFamily: "'Space Mono', monospace",
+                letterSpacing: "0.05em",
+                fontWeight: view === item.id ? 700 : 400,
+              }}>{item.label.toUpperCase()}</span>
+              {view === item.id && (
+                <span style={{
+                  position: "absolute", bottom: 6,
+                  width: 4, height: 4, borderRadius: "50%",
+                  background: "#E8FF47",
+                  marginTop: 2,
+                }} />
+              )}
+            </button>
+          ))}
+
+          {/* Avatar / Logout */}
+          <button onClick={handleLogout} style={{
+            flex: 1, display: "flex", flexDirection: "column",
+            alignItems: "center", gap: 4,
+            background: "transparent", border: "none",
+            cursor: "pointer", padding: "6px 0",
+          }}>
+            <div style={{
+              width: 28, height: 28, borderRadius: "50%",
+              background: (user?.avatar_color || "#E8FF47") + "22",
+              border: `2px solid ${(user?.avatar_color || "#E8FF47")}55`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 12, fontWeight: 700, color: user?.avatar_color || "#E8FF47",
+              fontFamily: "'Space Mono', monospace",
+            }}>{user?.nombre?.charAt(0) || "?"}</div>
+            <span style={{
+              fontSize: 10, fontFamily: "'Space Mono', monospace",
+              color: "#555", letterSpacing: "0.05em",
+            }}>SALIR</span>
+          </button>
+        </nav>
+      </>
+    );
+  }
+
+  // ── DESKTOP: sidebar lateral ───────────────────────────────────
   return (
     <aside style={{
       width: 220, background: "rgba(10,10,11,0.98)",
